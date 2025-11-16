@@ -1,0 +1,14 @@
+# Default configuration for rtc-scheduler
+
+rtc:
+  device: "/dev/rtc0"
+  timezone: "UTC"
+
+scheduler:
+  type: "at"
+  log_file: "/var/log/rtc-scheduler.log"
+
+service:
+  name: "rtc-scheduler"
+  description: "RTC-based power scheduler"
+  user: "root"
