@@ -156,22 +156,24 @@ func (s *SystemdService) generateServiceContent(executablePath string) string {
 	return fmt.Sprintf(`[Unit]
 Description=RTC Power Schedule Manager
 Documentation=https://github.com/yourusername/rtc-scheduler
-After=network.target time-sync.target
+After=network.target time-sync.target atd.service
 
 [Service]
 Type=oneshot
+User=root
 ExecStart=%s -run-service
 RemainAfterExit=yes
 StandardOutput=journal
 StandardError=journal
 Restart=no
 
-# Seguridad
+# Permisos necesarios
 PrivateTmp=yes
-NoNewPrivileges=yes
+NoNewPrivileges=no
 ProtectSystem=strict
 ProtectHome=yes
-ReadWritePaths=/sys/class/rtc/rtc0
+ReadWritePaths=/sys/class/rtc/rtc0 /etc/rtc-scheduler.json
+CapabilityBoundingSet=CAP_SYS_ADMIN
 
 [Install]
 WantedBy=multi-user.target
