@@ -4,7 +4,9 @@ package scheduler
 import (
 	"errors"
 	"fmt"
+	"os"
 	"os/exec"
+	"path/filepath"
 	"regexp"
 	"strings"
 	"time"
@@ -13,8 +15,9 @@ import (
 )
 
 var (
-	ErrAtNotAvailable = errors.New("'at' command is not available")
-	ErrInvalidTime    = errors.New("invalid time for scheduling")
+	ErrAtNotAvailable     = errors.New("'at' command is not available")
+	ErrInvalidTime        = errors.New("invalid time for scheduling")
+	ErrFilesystemReadOnly = errors.New("filesystem is read-only, cannot schedule shutdown")
 )
 
 // AtScheduler implementa SchedulerRepository usando el comando 'at'
@@ -43,6 +46,11 @@ func NewAtSchedulerWithTestMode(testMode bool) *AtScheduler {
 func (s *AtScheduler) ScheduleShutdown(t time.Time) error {
 	if !s.IsAvailable() {
 		return ErrAtNotAvailable
+	}
+
+	// Verificar que el filesystem permita escritura
+	if !s.isFilesystemWritable() {
+		return ErrFilesystemReadOnly
 	}
 
 	// Calcular minutos hasta el apagado
@@ -130,6 +138,29 @@ func (s *AtScheduler) IsAvailable() bool {
 	// Verificar que el demonio atd está corriendo
 	cmd = exec.Command("systemctl", "is-active", "atd")
 	err = cmd.Run()
+	return err == nil
+}
+
+// isFilesystemWritable verifica si el filesystem permite escritura en el directorio de 'at'
+func (s *AtScheduler) isFilesystemWritable() bool {
+	// Intentar crear un archivo temporal en el directorio de 'at'
+	atDir := "/var/spool/cron/atjobs"
+	testFile := filepath.Join(atDir, ".rtc_scheduler_test")
+
+	// Verificar que el directorio existe
+	if _, err := os.Stat(atDir); os.IsNotExist(err) {
+		return false
+	}
+
+	// Intentar crear archivo temporal
+	file, err := os.Create(testFile)
+	if err != nil {
+		return false
+	}
+	file.Close()
+
+	// Intentar borrar el archivo temporal
+	err = os.Remove(testFile)
 	return err == nil
 }
 
@@ -233,6 +264,11 @@ func (s *AtScheduler) GetJobDetails(jobID string) (string, error) {
 func (s *AtScheduler) ScheduleAt(t time.Time, command string) error {
 	if !s.IsAvailable() {
 		return ErrAtNotAvailable
+	}
+
+	// Verificar que el filesystem permita escritura
+	if !s.isFilesystemWritable() {
+		return ErrFilesystemReadOnly
 	}
 
 	duration := time.Until(t)

@@ -16,7 +16,7 @@ import (
 
 const (
 	configFilePath = "/etc/rtc-scheduler.json"
-	version        = "1.0.0"
+	version        = "1.0.11"
 )
 
 var (
@@ -71,7 +71,7 @@ type DependencyContainer struct {
 	rtcRepo       *rtc.LinuxRTC
 	configRepo    *config.JSONConfigRepository
 	serviceRepo   *systemd.SystemdService
-	schedulerRepo *scheduler.AtScheduler
+	schedulerRepo *scheduler.HybridScheduler
 
 	// Use Cases
 	installUC    *usecases.InstallServiceUseCase
@@ -90,7 +90,7 @@ func initializeDependencies(log logger.Logger) *DependencyContainer {
 	rtcRepo := rtc.NewLinuxRTC()
 	configRepo := config.NewJSONConfigRepository(configFilePath)
 	serviceRepo := systemd.NewSystemdService()
-	schedulerRepo := scheduler.NewAtScheduler()
+	schedulerRepo := scheduler.NewHybridScheduler()
 
 	// Verificar que componentes críticos estén disponibles
 	if !rtcRepo.IsAvailable() {
@@ -99,9 +99,10 @@ func initializeDependencies(log logger.Logger) *DependencyContainer {
 	}
 
 	if !schedulerRepo.IsAvailable() {
-		log.Warn("'at' command not available")
-		log.Warn("Install it with: sudo apt install at")
-		log.Warn("Shutdown scheduling will not work without it")
+		log.Warn("No suitable scheduler available")
+		log.Warn("Neither 'at' command nor systemd-run found")
+		log.Warn("Install at with: sudo apt install at")
+		log.Warn("Shutdown scheduling will not work without scheduling capabilities")
 	}
 
 	// Inicializar casos de uso (Application Layer)

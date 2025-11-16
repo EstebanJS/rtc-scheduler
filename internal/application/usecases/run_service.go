@@ -2,10 +2,12 @@
 package usecases
 
 import (
+	"errors"
 	"fmt"
 	"os"
 
 	"rtc-scheduler/internal/domain/repositories"
+	"rtc-scheduler/internal/infrastructure/scheduler"
 	"rtc-scheduler/pkg/logger"
 )
 
@@ -124,7 +126,23 @@ func (uc *RunServiceUseCase) Execute(input *RunServiceInput) (*RunServiceOutput,
 	// Programar apagado
 	fmt.Fprintf(os.Stderr, "DEBUG: Scheduling shutdown...\n")
 	if err := uc.schedulerRepo.ScheduleShutdown(schedule.ShutdownTime); err != nil {
-		// Limpiar alarma si falla el scheduling
+		// Verificar si es un error de filesystem read-only (modo degradado)
+		if errors.Is(err, scheduler.ErrFilesystemReadOnly) {
+			// Modo degradado: RTC funciona, pero shutdown no se programa
+			warnMsg := "Filesystem is read-only, operating in degraded mode: RTC wake alarm configured but shutdown scheduling unavailable"
+			uc.logger.Warn(warnMsg, "error", err)
+			fmt.Fprintf(os.Stderr, "WARNING: %s\n", warnMsg)
+			fmt.Fprintf(os.Stderr, "INFO: RTC wake alarm remains configured for automatic startup\n")
+
+			uc.logger.Info("Service execution completed in degraded mode (RTC only)")
+
+			return &RunServiceOutput{
+				Executed: true,
+				Message:  "RTC wake alarm configured (shutdown scheduling unavailable due to read-only filesystem)",
+			}, nil
+		}
+
+		// Para otros errores, limpiar alarma y fallar
 		uc.rtcRepo.ClearWakeAlarm()
 		errMsg := fmt.Sprintf("Failed to schedule shutdown: %v", err)
 		uc.logger.Error("Failed to schedule shutdown", "error", err)

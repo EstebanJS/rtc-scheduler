@@ -156,7 +156,9 @@ func (s *SystemdService) generateServiceContent(executablePath string) string {
 	return fmt.Sprintf(`[Unit]
 Description=RTC Power Schedule Manager
 Documentation=https://github.com/yourusername/rtc-scheduler
-After=network.target time-sync.target atd.service
+After=network.target time-sync.target
+Wants=atd.service
+# systemd-run is available in most systemd installations, no need for Wants
 
 [Service]
 Type=oneshot
@@ -167,13 +169,17 @@ StandardOutput=journal
 StandardError=journal
 Restart=no
 
-# Permisos necesarios
+# Permisos necesarios para RTC y scheduling
 PrivateTmp=yes
 NoNewPrivileges=no
 ProtectSystem=strict
 ProtectHome=yes
-ReadWritePaths=/sys/class/rtc/rtc0 /etc/rtc-scheduler.json
+ReadWritePaths=/sys/class/rtc/rtc0 /etc/rtc-scheduler.json /var/spool/cron/atjobs
 CapabilityBoundingSet=CAP_SYS_ADMIN
+
+# Environment
+Environment=SYSTEMD_LOG_LEVEL=info
+Environment=PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 
 [Install]
 WantedBy=multi-user.target
