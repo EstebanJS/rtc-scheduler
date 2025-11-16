@@ -2,6 +2,9 @@
 package usecases
 
 import (
+	"fmt"
+	"os"
+
 	"rtc-scheduler/internal/domain/repositories"
 	"rtc-scheduler/pkg/logger"
 )
@@ -38,9 +41,28 @@ func NewRunServiceUseCase(
 func (uc *RunServiceUseCase) Execute(input *RunServiceInput) (*RunServiceOutput, error) {
 	uc.logger.Info("Running service execution")
 
+	// Validación inicial de dependencias
+	fmt.Fprintf(os.Stderr, "DEBUG: Validating dependencies...\n")
+	if !uc.rtcRepo.IsAvailable() {
+		errMsg := "RTC device is not available"
+		fmt.Fprintf(os.Stderr, "ERROR: %s\n", errMsg)
+		return nil, fmt.Errorf(errMsg)
+	}
+	fmt.Fprintf(os.Stderr, "DEBUG: RTC device is available\n")
+
+	if !uc.schedulerRepo.IsAvailable() {
+		errMsg := "Scheduler (at command) is not available"
+		fmt.Fprintf(os.Stderr, "ERROR: %s\n", errMsg)
+		return nil, fmt.Errorf(errMsg)
+	}
+	fmt.Fprintf(os.Stderr, "DEBUG: Scheduler is available\n")
+
 	// Verificar que haya configuración
 	if !uc.configRepo.Exists() {
-		uc.logger.Warn("No configuration found, skipping service execution")
+		errMsg := "No configuration found, skipping service execution"
+		uc.logger.Warn(errMsg)
+		// Also write to stderr for systemd logging
+		fmt.Fprintf(os.Stderr, "ERROR: %s\n", errMsg)
 		return &RunServiceOutput{
 			Executed: false,
 			Message:  "No configuration found",
@@ -48,15 +70,21 @@ func (uc *RunServiceUseCase) Execute(input *RunServiceInput) (*RunServiceOutput,
 	}
 
 	// Cargar configuración
+	fmt.Fprintf(os.Stderr, "DEBUG: Loading configuration...\n")
 	config, err := uc.configRepo.Load()
 	if err != nil {
+		errMsg := fmt.Sprintf("Failed to load configuration: %v", err)
 		uc.logger.Error("Failed to load configuration", "error", err)
+		fmt.Fprintf(os.Stderr, "ERROR: %s\n", errMsg)
 		return nil, err
 	}
+	fmt.Fprintf(os.Stderr, "DEBUG: Configuration loaded successfully\n")
 
 	// Verificar que esté habilitado
 	if !config.Enabled {
-		uc.logger.Info("Service is disabled, skipping execution")
+		msg := "Service is disabled, skipping execution"
+		uc.logger.Info(msg)
+		fmt.Fprintf(os.Stderr, "INFO: %s\n", msg)
 		return &RunServiceOutput{
 			Executed: false,
 			Message:  "Service is disabled",
@@ -64,11 +92,19 @@ func (uc *RunServiceUseCase) Execute(input *RunServiceInput) (*RunServiceOutput,
 	}
 
 	// Convertir configuración a schedule
+	fmt.Fprintf(os.Stderr, "DEBUG: Parsing schedule from config...\n")
 	schedule, err := config.ParseToSchedule()
 	if err != nil {
+		errMsg := fmt.Sprintf("Failed to parse schedule from config: %v", err)
 		uc.logger.Error("Failed to parse schedule from config", "error", err)
+		fmt.Fprintf(os.Stderr, "ERROR: %s\n", errMsg)
 		return nil, err
 	}
+	fmt.Fprintf(os.Stderr, "DEBUG: Schedule parsed successfully\n")
+
+	fmt.Fprintf(os.Stderr, "DEBUG: Executing schedule - Wake: %s, Shutdown: %s\n",
+		schedule.WakeTime.Format("2006-01-02 15:04:05"),
+		schedule.ShutdownTime.Format("2006-01-02 15:04:05"))
 
 	uc.logger.Info("Executing schedule",
 		"wake_time", schedule.WakeTime,
@@ -76,18 +112,26 @@ func (uc *RunServiceUseCase) Execute(input *RunServiceInput) (*RunServiceOutput,
 	)
 
 	// Configurar alarma RTC
+	fmt.Fprintf(os.Stderr, "DEBUG: Setting RTC wake alarm...\n")
 	if err := uc.rtcRepo.SetWakeAlarm(schedule.WakeTime); err != nil {
+		errMsg := fmt.Sprintf("Failed to set RTC wake alarm: %v", err)
 		uc.logger.Error("Failed to set RTC wake alarm", "error", err)
+		fmt.Fprintf(os.Stderr, "ERROR: %s\n", errMsg)
 		return nil, err
 	}
+	fmt.Fprintf(os.Stderr, "DEBUG: RTC wake alarm set successfully\n")
 
 	// Programar apagado
+	fmt.Fprintf(os.Stderr, "DEBUG: Scheduling shutdown...\n")
 	if err := uc.schedulerRepo.ScheduleShutdown(schedule.ShutdownTime); err != nil {
 		// Limpiar alarma si falla el scheduling
 		uc.rtcRepo.ClearWakeAlarm()
+		errMsg := fmt.Sprintf("Failed to schedule shutdown: %v", err)
 		uc.logger.Error("Failed to schedule shutdown", "error", err)
+		fmt.Fprintf(os.Stderr, "ERROR: %s\n", errMsg)
 		return nil, err
 	}
+	fmt.Fprintf(os.Stderr, "DEBUG: Shutdown scheduled successfully\n")
 
 	uc.logger.Info("Service execution completed successfully")
 
