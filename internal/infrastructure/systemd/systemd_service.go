@@ -156,7 +156,7 @@ func (s *SystemdService) generateServiceContent(executablePath string) string {
 	return fmt.Sprintf(`[Unit]
 Description=RTC Power Schedule Manager
 Documentation=https://github.com/yourusername/rtc-scheduler
-After=network.target time-sync.target
+After=network.target time-sync.target sleep.target
 Wants=atd.service
 # systemd-run is available in most systemd installations, no need for Wants
 
@@ -182,7 +182,7 @@ Environment=SYSTEMD_LOG_LEVEL=info
 Environment=PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 
 [Install]
-WantedBy=multi-user.target
+WantedBy=multi-user.target sleep.target
 `, executablePath)
 }
 

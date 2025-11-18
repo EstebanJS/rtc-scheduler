@@ -18,6 +18,7 @@ go.work
 # Build directory
 bin/
 dist/
+releases/
 
 # IDE files
 .vscode/
@@ -39,4 +40,6 @@ Thumbs.db
 
 # Temporary files
 *.tmp
+# Binary
+rtc-scheduler
 *.temp

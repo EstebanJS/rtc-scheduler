@@ -17,7 +17,7 @@ import (
 var (
 	ErrAtNotAvailable     = errors.New("'at' command is not available")
 	ErrInvalidTime        = errors.New("invalid time for scheduling")
-	ErrFilesystemReadOnly = errors.New("filesystem is read-only, cannot schedule shutdown")
+	ErrFilesystemReadOnly = errors.New("filesystem is read-only, cannot schedule suspend")
 )
 
 // AtScheduler implementa SchedulerRepository usando el comando 'at'
@@ -42,7 +42,7 @@ func NewAtSchedulerWithTestMode(testMode bool) *AtScheduler {
 	}
 }
 
-// ScheduleShutdown programa un apagado del sistema
+// ScheduleShutdown programa una suspensión del sistema
 func (s *AtScheduler) ScheduleShutdown(t time.Time) error {
 	if !s.IsAvailable() {
 		return ErrAtNotAvailable
@@ -67,9 +67,9 @@ func (s *AtScheduler) ScheduleShutdown(t time.Time) error {
 	// Preparar comando
 	var command string
 	if s.testMode {
-		command = "echo 'TEST MODE: Shutdown time reached' | wall"
+		command = "echo 'TEST MODE: Suspend time reached' | wall"
 	} else {
-		command = "shutdown -h now"
+		command = "systemctl suspend"
 	}
 
 	// Ejecutar 'at'
@@ -78,7 +78,7 @@ func (s *AtScheduler) ScheduleShutdown(t time.Time) error {
 
 	output, err := cmd.CombinedOutput()
 	if err != nil {
-		return fmt.Errorf("failed to schedule shutdown: %w\nOutput: %s", err, string(output))
+		return fmt.Errorf("failed to schedule suspend: %w\nOutput: %s", err, string(output))
 	}
 
 	return nil
@@ -206,7 +206,7 @@ func (s *AtScheduler) parseAtqLine(line string) *repositories.ShutdownJob {
 	return &repositories.ShutdownJob{
 		ID:          jobID,
 		ScheduledAt: scheduledAt,
-		Command:     "shutdown", // Asumimos que es un shutdown
+		Command:     "suspend", // Asumimos que es un suspend
 	}
 }
 
@@ -219,8 +219,8 @@ func (s *AtScheduler) isShutdownJob(job *repositories.ShutdownJob) bool {
 		return false
 	}
 
-	// Buscar el comando 'shutdown' en la salida
-	return strings.Contains(string(output), "shutdown")
+	// Buscar el comando 'systemctl suspend' en la salida
+	return strings.Contains(string(output), "systemctl suspend")
 }
 
 // cancelJob cancela un trabajo específico
