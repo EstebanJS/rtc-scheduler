@@ -64,7 +64,7 @@ func (uc *RunServiceUseCase) Execute(input *RunServiceInput) (*RunServiceOutput,
 		errMsg := "No configuration found, skipping service execution"
 		uc.logger.Warn(errMsg)
 		// Also write to stderr for systemd logging
-		fmt.Fprintf(os.Stderr, "ERROR: %s\n", errMsg)
+		fmt.Fprintln(os.Stderr, "ERROR:", errMsg)
 		return &RunServiceOutput{
 			Executed: false,
 			Message:  "No configuration found",
@@ -77,7 +77,7 @@ func (uc *RunServiceUseCase) Execute(input *RunServiceInput) (*RunServiceOutput,
 	if err != nil {
 		errMsg := fmt.Sprintf("Failed to load configuration: %v", err)
 		uc.logger.Error("Failed to load configuration", "error", err)
-		fmt.Fprintf(os.Stderr, "ERROR: %s\n", errMsg)
+		fmt.Fprintln(os.Stderr, "ERROR:", errMsg)
 		return nil, err
 	}
 	fmt.Fprintf(os.Stderr, "DEBUG: Configuration loaded successfully\n")
@@ -86,7 +86,7 @@ func (uc *RunServiceUseCase) Execute(input *RunServiceInput) (*RunServiceOutput,
 	if !config.Enabled {
 		msg := "Service is disabled, skipping execution"
 		uc.logger.Info(msg)
-		fmt.Fprintf(os.Stderr, "INFO: %s\n", msg)
+		fmt.Fprintln(os.Stderr, "INFO:", msg)
 		return &RunServiceOutput{
 			Executed: false,
 			Message:  "Service is disabled",
@@ -99,7 +99,7 @@ func (uc *RunServiceUseCase) Execute(input *RunServiceInput) (*RunServiceOutput,
 	if err != nil {
 		errMsg := fmt.Sprintf("Failed to parse schedule from config: %v", err)
 		uc.logger.Error("Failed to parse schedule from config", "error", err)
-		fmt.Fprintf(os.Stderr, "ERROR: %s\n", errMsg)
+		fmt.Fprintln(os.Stderr, "ERROR:", errMsg)
 		return nil, err
 	}
 	fmt.Fprintf(os.Stderr, "DEBUG: Schedule parsed successfully\n")
@@ -118,7 +118,7 @@ func (uc *RunServiceUseCase) Execute(input *RunServiceInput) (*RunServiceOutput,
 	if err := uc.rtcRepo.SetWakeAlarm(schedule.WakeTime); err != nil {
 		errMsg := fmt.Sprintf("Failed to set RTC wake alarm: %v", err)
 		uc.logger.Error("Failed to set RTC wake alarm", "error", err)
-		fmt.Fprintf(os.Stderr, "ERROR: %s\n", errMsg)
+		fmt.Fprintln(os.Stderr, "ERROR:", errMsg)
 		return nil, err
 	}
 	fmt.Fprintf(os.Stderr, "DEBUG: RTC wake alarm set successfully\n")
@@ -131,8 +131,8 @@ func (uc *RunServiceUseCase) Execute(input *RunServiceInput) (*RunServiceOutput,
 			// Modo degradado: RTC funciona, pero shutdown no se programa
 			warnMsg := "Filesystem is read-only, operating in degraded mode: RTC wake alarm configured but shutdown scheduling unavailable"
 			uc.logger.Warn(warnMsg, "error", err)
-			fmt.Fprintf(os.Stderr, "WARNING: %s\n", warnMsg)
-			fmt.Fprintf(os.Stderr, "INFO: RTC wake alarm remains configured for automatic startup\n")
+			fmt.Fprintln(os.Stderr, "WARNING:", warnMsg)
+			fmt.Fprintln(os.Stderr, "INFO: RTC wake alarm remains configured for automatic startup")
 
 			uc.logger.Info("Service execution completed in degraded mode (RTC only)")
 
@@ -146,7 +146,7 @@ func (uc *RunServiceUseCase) Execute(input *RunServiceInput) (*RunServiceOutput,
 		_ = uc.rtcRepo.ClearWakeAlarm()
 		errMsg := fmt.Sprintf("Failed to schedule shutdown: %v", err)
 		uc.logger.Error("Failed to schedule shutdown", "error", err)
-		fmt.Fprintf(os.Stderr, "ERROR: %s\n", errMsg)
+		fmt.Fprintln(os.Stderr, "ERROR:", errMsg)
 		return nil, err
 	}
 	fmt.Fprintf(os.Stderr, "DEBUG: Shutdown scheduled successfully\n")
