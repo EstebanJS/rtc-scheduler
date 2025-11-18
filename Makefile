@@ -7,7 +7,7 @@ MAIN_PATH=cmd/rtc-scheduler/main.go
 INSTALL_PATH=/usr/local/bin
 
 # Version information
-VERSION?=1.0.0
+VERSION?=1.1.0
 BUILD_TIME=$(shell date -u +"%Y-%m-%dT%H:%M:%SZ")
 GIT_COMMIT=$(shell git rev-parse --short HEAD 2>/dev/null || echo "unknown")
 

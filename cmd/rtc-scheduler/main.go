@@ -16,7 +16,7 @@ import (
 
 const (
 	configFilePath = "/etc/rtc-scheduler.json"
-	version        = "1.0.11"
+	version        = "1.1.0"
 )
 
 var (

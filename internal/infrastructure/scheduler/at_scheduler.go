@@ -245,7 +245,7 @@ func (s *AtScheduler) EnsureAtdRunning() error {
 
 	// Habilitar para arranque automático
 	cmd = exec.Command("systemctl", "enable", "atd")
-	cmd.Run() // Ignorar error aquí
+	_ = cmd.Run() // Ignorar error aquí
 
 	return nil
 }

@@ -78,7 +78,7 @@ func (uc *InstallServiceUseCase) Execute(input *InstallServiceInput) (*InstallSe
 	// 4. Instalar servicio systemd
 	if err := uc.serviceRepo.Install(execPath); err != nil {
 		// Limpiar configuración si falla la instalación
-		uc.configRepo.Delete()
+		uc.configRepo.Delete() //nolint:errcheck
 		return nil, fmt.Errorf("failed to install service: %w", err)
 	}
 
@@ -155,9 +155,7 @@ func (uc *InstallServiceUseCase) Rollback() error {
 	uc.logger.Info("Rolling back installation")
 
 	// Eliminar configuración
-	if err := uc.configRepo.Delete(); err != nil {
-		uc.logger.Warn("Failed to delete configuration during rollback", "error", err)
-	}
+	_ = uc.configRepo.Delete() //nolint:errcheck
 
 	// Desinstalar servicio
 	if err := uc.serviceRepo.Uninstall(); err != nil {

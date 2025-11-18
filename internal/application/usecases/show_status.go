@@ -124,7 +124,7 @@ func (uc *ShowStatusUseCase) generateStatusMessage(output *ShowStatusOutput) str
 		if output.ServiceRunning {
 			status = "✅ Running"
 		}
-		msg += fmt.Sprintf("   Installed: ✅ Yes\n")
+		msg += "   Installed: ✅ Yes\n"
 		msg += fmt.Sprintf("   Status: %s\n", status)
 		msg += fmt.Sprintf("   Enabled: %s\n", map[bool]string{true: "✅ Yes", false: "❌ No"}[output.ServiceEnabled])
 	} else {
@@ -135,7 +135,7 @@ func (uc *ShowStatusUseCase) generateStatusMessage(output *ShowStatusOutput) str
 	// Configuración
 	msg += "🔧 Configuration:\n"
 	if output.ConfigExists {
-		msg += fmt.Sprintf("   Exists: ✅ Yes\n")
+		msg += "   Exists: ✅ Yes\n"
 		msg += fmt.Sprintf("   Wake Time: %s\n", output.WakeTime)
 		shutdownStatus := "Not configured"
 		if output.ShutdownTime != "" {
