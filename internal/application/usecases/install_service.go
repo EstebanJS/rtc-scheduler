@@ -155,7 +155,7 @@ func (uc *InstallServiceUseCase) Rollback() error {
 	uc.logger.Info("Rolling back installation")
 
 	// Eliminar configuración
-	_ = uc.configRepo.Delete()
+	_ = uc.configRepo.Delete() //nolint:errcheck
 
 	// Desinstalar servicio
 	if err := uc.serviceRepo.Uninstall(); err != nil {

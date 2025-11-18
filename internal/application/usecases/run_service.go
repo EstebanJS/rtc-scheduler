@@ -44,20 +44,20 @@ func (uc *RunServiceUseCase) Execute(input *RunServiceInput) (*RunServiceOutput,
 	uc.logger.Info("Running service execution")
 
 	// Validación inicial de dependencias
-	fmt.Fprintf(os.Stderr, "DEBUG: Validating dependencies...\n")
+	fmt.Fprintln(os.Stderr, "DEBUG: Validating dependencies...")
 	if !uc.rtcRepo.IsAvailable() {
 		errMsg := "RTC device is not available"
 		fmt.Fprintln(os.Stderr, "ERROR:", errMsg)
 		return nil, fmt.Errorf(errMsg)
 	}
-	fmt.Fprintf(os.Stderr, "DEBUG: RTC device is available\n")
+	fmt.Fprintln(os.Stderr, "DEBUG: RTC device is available")
 
 	if !uc.schedulerRepo.IsAvailable() {
 		errMsg := "Scheduler (at command) is not available"
 		fmt.Fprintln(os.Stderr, "ERROR:", errMsg)
 		return nil, fmt.Errorf(errMsg)
 	}
-	fmt.Fprintf(os.Stderr, "DEBUG: Scheduler is available\n")
+	fmt.Fprintln(os.Stderr, "DEBUG: Scheduler is available")
 
 	// Verificar que haya configuración
 	if !uc.configRepo.Exists() {
@@ -72,7 +72,7 @@ func (uc *RunServiceUseCase) Execute(input *RunServiceInput) (*RunServiceOutput,
 	}
 
 	// Cargar configuración
-	fmt.Fprintf(os.Stderr, "DEBUG: Loading configuration...\n")
+	fmt.Fprintln(os.Stderr, "DEBUG: Loading configuration...")
 	config, err := uc.configRepo.Load()
 	if err != nil {
 		errMsg := fmt.Sprintf("Failed to load configuration: %v", err)
@@ -80,7 +80,7 @@ func (uc *RunServiceUseCase) Execute(input *RunServiceInput) (*RunServiceOutput,
 		fmt.Fprintln(os.Stderr, "ERROR:", errMsg)
 		return nil, err
 	}
-	fmt.Fprintf(os.Stderr, "DEBUG: Configuration loaded successfully\n")
+	fmt.Fprintln(os.Stderr, "DEBUG: Configuration loaded successfully")
 
 	// Verificar que esté habilitado
 	if !config.Enabled {
@@ -94,7 +94,7 @@ func (uc *RunServiceUseCase) Execute(input *RunServiceInput) (*RunServiceOutput,
 	}
 
 	// Convertir configuración a schedule
-	fmt.Fprintf(os.Stderr, "DEBUG: Parsing schedule from config...\n")
+	fmt.Fprintln(os.Stderr, "DEBUG: Parsing schedule from config...")
 	schedule, err := config.ParseToSchedule()
 	if err != nil {
 		errMsg := fmt.Sprintf("Failed to parse schedule from config: %v", err)
@@ -102,7 +102,7 @@ func (uc *RunServiceUseCase) Execute(input *RunServiceInput) (*RunServiceOutput,
 		fmt.Fprintln(os.Stderr, "ERROR:", errMsg)
 		return nil, err
 	}
-	fmt.Fprintf(os.Stderr, "DEBUG: Schedule parsed successfully\n")
+	fmt.Fprintln(os.Stderr, "DEBUG: Schedule parsed successfully")
 
 	fmt.Fprintf(os.Stderr, "DEBUG: Executing schedule - Wake: %s, Shutdown: %s\n",
 		schedule.WakeTime.Format("2006-01-02 15:04:05"),
@@ -114,17 +114,17 @@ func (uc *RunServiceUseCase) Execute(input *RunServiceInput) (*RunServiceOutput,
 	)
 
 	// Configurar alarma RTC
-	fmt.Fprintf(os.Stderr, "DEBUG: Setting RTC wake alarm...\n")
+	fmt.Fprintln(os.Stderr, "DEBUG: Setting RTC wake alarm...")
 	if err := uc.rtcRepo.SetWakeAlarm(schedule.WakeTime); err != nil {
 		errMsg := fmt.Sprintf("Failed to set RTC wake alarm: %v", err)
 		uc.logger.Error("Failed to set RTC wake alarm", "error", err)
 		fmt.Fprintln(os.Stderr, "ERROR:", errMsg)
 		return nil, err
 	}
-	fmt.Fprintf(os.Stderr, "DEBUG: RTC wake alarm set successfully\n")
+	fmt.Fprintln(os.Stderr, "DEBUG: RTC wake alarm set successfully")
 
 	// Programar apagado
-	fmt.Fprintf(os.Stderr, "DEBUG: Scheduling shutdown...\n")
+	fmt.Fprintln(os.Stderr, "DEBUG: Scheduling suspend...")
 	if err := uc.schedulerRepo.ScheduleShutdown(schedule.ShutdownTime); err != nil {
 		// Verificar si es un error de filesystem read-only (modo degradado)
 		if errors.Is(err, scheduler.ErrFilesystemReadOnly) {
@@ -143,13 +143,13 @@ func (uc *RunServiceUseCase) Execute(input *RunServiceInput) (*RunServiceOutput,
 		}
 
 		// Para otros errores, limpiar alarma y fallar
-		_ = uc.rtcRepo.ClearWakeAlarm()
+		_ = uc.rtcRepo.ClearWakeAlarm() //nolint:errcheck
 		errMsg := fmt.Sprintf("Failed to schedule shutdown: %v", err)
 		uc.logger.Error("Failed to schedule shutdown", "error", err)
 		fmt.Fprintln(os.Stderr, "ERROR:", errMsg)
 		return nil, err
 	}
-	fmt.Fprintf(os.Stderr, "DEBUG: Shutdown scheduled successfully\n")
+	fmt.Fprintln(os.Stderr, "DEBUG: Suspend scheduled successfully")
 
 	uc.logger.Info("Service execution completed successfully")
 
