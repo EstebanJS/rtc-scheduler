@@ -48,14 +48,14 @@ func (uc *RunServiceUseCase) Execute(input *RunServiceInput) (*RunServiceOutput,
 	if !uc.rtcRepo.IsAvailable() {
 		errMsg := "RTC device is not available"
 		fmt.Fprintln(os.Stderr, "ERROR:", errMsg)
-		return nil, fmt.Errorf(errMsg)
+		return nil, errors.New(errMsg)
 	}
 	fmt.Fprintln(os.Stderr, "DEBUG: RTC device is available")
 
 	if !uc.schedulerRepo.IsAvailable() {
 		errMsg := "Scheduler (at command) is not available"
 		fmt.Fprintln(os.Stderr, "ERROR:", errMsg)
-		return nil, fmt.Errorf(errMsg)
+		return nil, errors.New(errMsg)
 	}
 	fmt.Fprintln(os.Stderr, "DEBUG: Scheduler is available")
 

@@ -78,7 +78,7 @@ func (uc *InstallServiceUseCase) Execute(input *InstallServiceInput) (*InstallSe
 	// 4. Instalar servicio systemd
 	if err := uc.serviceRepo.Install(execPath); err != nil {
 		// Limpiar configuración si falla la instalación
-		uc.configRepo.Delete()
+		uc.configRepo.Delete() //nolint:errcheck
 		return nil, fmt.Errorf("failed to install service: %w", err)
 	}
 

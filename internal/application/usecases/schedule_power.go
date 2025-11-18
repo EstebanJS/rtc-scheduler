@@ -70,7 +70,7 @@ func (uc *SchedulePowerUseCase) Execute(input *SchedulePowerInput) (*SchedulePow
 	// Programar apagado
 	if err := uc.schedulerRepo.ScheduleShutdown(schedule.ShutdownTime); err != nil {
 		// Si falla, limpiar la alarma RTC
-		uc.rtcRepo.ClearWakeAlarm()
+		uc.rtcRepo.ClearWakeAlarm() //nolint:errcheck
 		uc.logger.Error("Failed to schedule shutdown", "error", err)
 		return nil, fmt.Errorf("failed to schedule shutdown: %w", err)
 	}
