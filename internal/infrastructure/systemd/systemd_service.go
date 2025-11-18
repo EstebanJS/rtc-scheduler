@@ -67,10 +67,10 @@ func (s *SystemdService) Uninstall() error {
 	}
 
 	// Detener el servicio si está corriendo
-	s.Stop()
+	_ = s.Stop()
 
 	// Deshabilitar el servicio
-	s.Disable()
+	_ = s.Disable()
 
 	// Eliminar archivo
 	if err := os.Remove(s.servicePath); err != nil {

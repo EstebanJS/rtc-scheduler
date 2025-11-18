@@ -3,7 +3,6 @@ package formatters
 
 import (
 	"fmt"
-	"time"
 
 	"rtc-scheduler/internal/application/usecases"
 )
@@ -83,22 +82,4 @@ func (f *OutputFormatter) PrintScheduleSuccess(output *usecases.SchedulePowerOut
 // PrintError imprime un mensaje de error formateado
 func (f *OutputFormatter) PrintError(err error) {
 	fmt.Printf("❌ Error: %v\n", err)
-}
-
-// formatDuration formatea una duración de forma legible
-func (f *OutputFormatter) formatDuration(d time.Duration) string {
-	if d < 0 {
-		return "Time has passed"
-	}
-	
-	hours := int(d.Hours())
-	minutes := int(d.Minutes()) % 60
-	
-	if hours > 24 {
-		days := hours / 24
-		hours = hours % 24
-		return fmt.Sprintf("%dd %dh %dm", days, hours, minutes)
-	}
-	
-	return fmt.Sprintf("%dh %dm", hours, minutes)
 }

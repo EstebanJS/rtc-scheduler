@@ -47,14 +47,14 @@ func (uc *RunServiceUseCase) Execute(input *RunServiceInput) (*RunServiceOutput,
 	fmt.Fprintf(os.Stderr, "DEBUG: Validating dependencies...\n")
 	if !uc.rtcRepo.IsAvailable() {
 		errMsg := "RTC device is not available"
-		fmt.Fprintf(os.Stderr, "ERROR: %s\n", errMsg)
+		fmt.Fprintln(os.Stderr, "ERROR:", errMsg)
 		return nil, fmt.Errorf(errMsg)
 	}
 	fmt.Fprintf(os.Stderr, "DEBUG: RTC device is available\n")
 
 	if !uc.schedulerRepo.IsAvailable() {
 		errMsg := "Scheduler (at command) is not available"
-		fmt.Fprintf(os.Stderr, "ERROR: %s\n", errMsg)
+		fmt.Fprintln(os.Stderr, "ERROR:", errMsg)
 		return nil, fmt.Errorf(errMsg)
 	}
 	fmt.Fprintf(os.Stderr, "DEBUG: Scheduler is available\n")
@@ -143,7 +143,7 @@ func (uc *RunServiceUseCase) Execute(input *RunServiceInput) (*RunServiceOutput,
 		}
 
 		// Para otros errores, limpiar alarma y fallar
-		uc.rtcRepo.ClearWakeAlarm()
+		_ = uc.rtcRepo.ClearWakeAlarm()
 		errMsg := fmt.Sprintf("Failed to schedule shutdown: %v", err)
 		uc.logger.Error("Failed to schedule shutdown", "error", err)
 		fmt.Fprintf(os.Stderr, "ERROR: %s\n", errMsg)

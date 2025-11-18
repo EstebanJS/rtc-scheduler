@@ -74,7 +74,7 @@ func (c *CLI) Run() error {
 
 	// Mostrar versión
 	if *version {
-		fmt.Println("rtc-scheduler v1.0.0")
+		fmt.Println("rtc-scheduler v1.1.0")
 		return nil
 	}
 
