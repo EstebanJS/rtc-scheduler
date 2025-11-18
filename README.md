@@ -4,7 +4,7 @@
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Linux](https://img.shields.io/badge/Linux-FCC624?style=flat&logo=linux&logoColor=black)](https://www.linux.org/)
 
-A robust power management system for Linux systems using RTC hardware and systemd services. Features automatic daily wake-up/shutdown cycles with intelligent fallback mechanisms.
+A robust power management system for Linux systems using RTC hardware and systemd services. Features automatic daily wake-up/suspend cycles with intelligent fallback mechanisms.
 
 **Built with Hexagonal Architecture & SOLID Principles** ✨
 
@@ -24,11 +24,12 @@ A robust power management system for Linux systems using RTC hardware and system
 
 ## 🎯 Features
 
-- ✅ **Automatic Power Scheduling**: Daily wake-up and shutdown cycles
+- ✅ **Automatic Power Scheduling**: Daily wake-up and suspend cycles
 - ✅ **RTC Hardware Integration**: Reliable wake-up using hardware clock
 - ✅ **Systemd Service**: Automatic recurring schedules
 - ✅ **Rich CLI Interface**: Full command-line control
-- ✅ **Test Mode**: Safe testing without actual shutdowns
+- ✅ **Test Mode**: Safe testing without actual suspend
+- ✅ **Low Power Suspend**: Uses system suspend for RTC wake compatibility
 - ✅ **Hexagonal Architecture**: Clean separation of concerns
 - ✅ **SOLID Principles**: Maintainable, extensible code
 - ✅ **Zero Dependencies**: Pure Go standard library
@@ -89,7 +90,7 @@ sudo rtc-scheduler -install -wake 08:00 -shutdown 22:00
 rtc-scheduler -status
 ```
 
-**🎉 That's it! Your system will now automatically wake up and shut down daily.**
+**🎉 That's it! Your system will now automatically wake up and suspend daily.**
 
 ## 📖 Usage
 
@@ -138,7 +139,7 @@ sudo rtc-scheduler -uninstall
 # 🔄 One-time manual schedule
 sudo rtc-scheduler -wake 08:00 -shutdown 22:00
 
-# 🧪 Test mode (doesn't actually shutdown)
+# 🧪 Test mode (doesn't actually suspend)
 sudo rtc-scheduler -wake 08:00 -shutdown 22:00 -test
 
 # 🧹 Clear wake alarm
@@ -274,8 +275,8 @@ sudo chmod +x /usr/local/bin/rtc-scheduler
          ▲                       │                       │
          │                       ▼                       ▼
 ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│ System Shutdown │ <- │   Timer Exec    │ <- │  Timer Created  │
-│   (Scheduled)   │    │   (at/systemd)  │    │  (Shutdown)     │
+│ System Suspend │ <- │   Timer Exec    │ <- │  Timer Created  │
+│   (Scheduled)   │    │   (at/systemd)  │    │  (Suspend)      │
 └─────────────────┘    └─────────────────┘    └─────────────────┘
 ```
 
@@ -293,7 +294,7 @@ sudo chmod +x /usr/local/bin/rtc-scheduler
    - Service completes (timers remain active)
 
 3. **🔄 Daily Power Cycle**:
-   - **Evening**: System shuts down at scheduled time
+   - **Evening**: System suspends at scheduled time
    - **Morning**: RTC alarm wakes system automatically
    - **Repeat**: Cycle continues daily without intervention
 
@@ -301,7 +302,7 @@ sudo chmod +x /usr/local/bin/rtc-scheduler
 
 For one-time operations: `sudo rtc-scheduler -wake HH:MM -shutdown HH:MM`
 - ✅ Immediately configures RTC wake alarm
-- ✅ Creates shutdown timer using available scheduler
+- ✅ Creates suspend timer using available scheduler
 - ✅ No permanent service installation required
 - ✅ Safe testing with `-test` flag
 
